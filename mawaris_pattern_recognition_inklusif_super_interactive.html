@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAI Inklusif: Mawaris Pattern Recognition & Case Simulator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js for Web Audio Synthesis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Lexend:wght@300;400;500;600;700;800&family=Open+Dyslexic&display=swap');
+
+        :root {
+            --font-primary: 'Lexend', sans-serif;
+            --font-heading: 'Fredoka', cursive, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background: linear-gradient(135deg, #0f392b 0%, #051c14 100%);
+            color: #1e293b;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .heading-font {
+            font-family: var(--font-heading);
+        }
+
+        /* High Contrast Theme Mode for Low Vision Students */
+        body.high-contrast {
+            background: #000000 !important;
+            color: #FFFF00 !important;
+        }
+        body.high-contrast .hc-card {
+            background-color: #121212 !important;
+            border: 3px solid #FFFF00 !important;
+            color: #FFFFFF !important;
+            box-shadow: none !important;
+        }
+        body.high-contrast .hc-text-main {
+            color: #FFFF00 !important;
+        }
+        body.high-contrast .hc-text-sub {
+            color: #FFFFFF !important;
+        }
+        body.high-contrast button {
+            border: 2px solid #FFFF00 !important;
+        }
+        body.high-contrast .hc-badge-furud {
+            background-color: #000099 !important;
+            color: #FFFFFF !important;
+            border: 2px solid #66b3ff !important;
+        }
+        body.high-contrast .hc-badge-ashabah {
+            background-color: #8b0000 !important;
+            color: #FFFFFF !important;
+            border: 2px solid #ff9999 !important;
+        }
+
+        /* Dyslexia Friendly Font Mode */
+        body.dyslexia-font {
+            font-family: 'Open Dyslexic', 'Lexend', sans-serif !important;
+            letter-spacing: 0.05em;
+            word-spacing: 0.1em;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom Animated Pulse Focus for Screen Reader & Accessibility */
+        button:focus, a:focus, input:focus, select:focus {
+            outline: 4px solid #f59e0b !important;
+            outline-offset: 3px;
+        }
+
+        /* Card flip & scale animations */
+        .card-anim {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .card-anim:hover {
+            transform: translateY(-4px) scale(1.01);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #059669;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #047857;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
+        }
+        .glow-active {
+            animation: pulseGlow 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between" id="app-body">
+
+    <!-- Accessibility Control Bar -->
+    <header class="bg-emerald-950 text-white border-b border-emerald-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-3">
+            
+            <!-- Brand & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-amber-400 to-amber-500 text-emerald-950 p-2.5 rounded-2xl flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-scale-balanced text-2xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg md:text-xl font-bold heading-font tracking-wide text-amber-300">PAI Inklusif Mawaris</h1>
+                        <span class="bg-emerald-800 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-semibold border border-emerald-700 hidden sm:inline-block">Kelas XII SMK</span>
+                    </div>
+                    <p class="text-xs text-emerald-300">
+                        Pattern Recognition: Ashabul Furud vs Ashabah 
+                        <span class="hidden sm:inline">&bull;</span> 
+                        <span class="text-amber-300 font-semibold block sm:inline">Kreator: Fahrudin, S.Pd.I</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Inclusive Accessibility Toolbar Buttons -->
+            <div class="flex items-center flex-wrap gap-2 text-xs md:text-sm">
+                <!-- Text-To-Speech Narration Toggle -->
+                <button onclick="toggleAudio()" id="btn-audio" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium border border-emerald-700" title="Audio Narasi">
+                    <i id="icon-audio" class="fa-solid fa-volume-high text-amber-400"></i>
+                    <span class="hidden md:inline">Suara: <strong id="status-audio">ON</strong></span>
+                </button>
+
+                <!-- BGM Synth Music Toggle -->
+                <button onclick="toggleBGM()" id="btn-bgm" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium border border-emerald-700" title="Musik Latar Interaktif">
+                    <i id="icon-bgm" class="fa-solid fa-music text-amber-400"></i>
+                    <span class="hidden md:inline">Musik: <strong id="status-bgm">OFF</strong></span>
+                </button>
+
+                <!-- High Contrast Mode Toggle -->
+                <button onclick="toggleHighContrast()" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium border border-emerald-700" title="Kontras Tinggi (Low Vision)">
+                    <i class="fa-solid fa-circle-half-stroke text-amber-400"></i>
+                    <span class="hidden md:inline">Kontras</span>
+                </button>
+
+                <!-- Dyslexia Font Toggle -->
+                <button onclick="toggleDyslexiaFont()" id="btn-dyslexia" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-2 rounded-xl flex items-center gap-1.5 transition font-medium border border-emerald-700" title="Font Disleksia">
+                    <i class="fa-solid fa-font text-amber-400"></i>
+                    <span class="hidden md:inline">Font Khusus</span>
+                </button>
+
+                <!-- Font Resizer -->
+                <div class="bg-emerald-800 px-2 py-1 rounded-xl flex items-center space-x-1 border border-emerald-700">
+                    <button onclick="adjustFontSize(-1)" class="w-7 h-7 rounded-lg hover:bg-emerald-700 font-bold text-emerald-200" title="Kecilkan Teks">A-</button>
+                    <button onclick="adjustFontSize(1)" class="w-7 h-7 rounded-lg hover:bg-emerald-700 font-bold text-amber-300 text-base" title="Besarkan Teks">A+</button>
+                </div>
+
+                <!-- Kamus & Silsilah Waris Modal Button -->
+                <button onclick="openModal('modal-kamus')" class="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>Peta & Kamus</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow space-y-6" id="main-content">
+
+        <!-- Top Score & Combo Streak Dashboard Banner -->
+        <div class="hc-card glass-panel p-4 md:p-5 rounded-3xl shadow-xl flex flex-wrap justify-between items-center gap-4 border border-emerald-100">
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <div class="w-14 h-14 bg-emerald-600 text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-inner">
+                        <i class="fa-solid fa-trophy text-amber-300"></i>
+                    </div>
+                    <span id="combo-badge" class="hidden absolute -top-2 -right-2 bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow animate-bounce">
+                        🔥 <span id="combo-count">0</span>x
+                    </span>
+                </div>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 hc-text-sub">Kemajuan Belajar</span>
+                    <h2 class="text-xl md:text-2xl font-black text-emerald-900 hc-text-main flex items-center gap-2">
+                        <span id="level-title">Pengenal Pola Pemula</span>
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Live Score & Progress Stats -->
+            <div class="flex items-center space-x-6 bg-emerald-50/80 px-5 py-2.5 rounded-2xl border border-emerald-200/60">
+                <div class="text-center">
+                    <span class="block text-[10px] uppercase font-extrabold text-emerald-800 tracking-wider">Skor Total</span>
+                    <span id="score-display" class="text-2xl md:text-3xl font-black text-emerald-700">0</span>
+                </div>
+                <div class="h-8 w-px bg-emerald-300"></div>
+                <div class="text-center">
+                    <span class="block text-[10px] uppercase font-extrabold text-amber-800 tracking-wider">Akurasi Pola</span>
+                    <span id="accuracy-display" class="text-2xl md:text-3xl font-black text-amber-600">0%</span>
+                </div>
+                <div class="h-8 w-px bg-emerald-300"></div>
+                <div class="text-center">
+                    <span class="block text-[10px] uppercase font-extrabold text-blue-800 tracking-wider">Progress Soal</span>
+                    <span id="progress-text" class="text-2xl md:text-3xl font-black text-blue-700">1/10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation Bar -->
+        <nav class="flex flex-wrap gap-2 justify-center">
+            <button onclick="switchTab('game-sort')" id="tab-sort" class="tab-btn bg-emerald-600 text-white font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md hover:bg-emerald-700 transition">
+                <i class="fa-solid fa-layer-group text-amber-300 text-lg"></i>
+                <span>Mode 1: Arena Sortir Pola</span>
+            </button>
+            <button onclick="switchTab('game-case')" id="tab-case" class="tab-btn bg-white text-emerald-900 font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow hover:bg-emerald-50 transition">
+                <i class="fa-solid fa-user-ninja text-emerald-600 text-lg"></i>
+                <span>Mode 2: Detektif Kasus</span>
+            </button>
+            <button onclick="switchTab('game-match')" id="tab-match" class="tab-btn bg-white text-emerald-900 font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow hover:bg-emerald-50 transition">
+                <i class="fa-solid fa-puzzle-piece text-amber-500 text-lg"></i>
+                <span>Mode 3: Padankan Pecahan</span>
+            </button>
+            <button onclick="switchTab('tab-rekap')" id="tab-summary" class="tab-btn bg-white text-emerald-900 font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow hover:bg-emerald-50 transition">
+                <i class="fa-solid fa-award text-amber-500 text-lg"></i>
+                <span>Laporan & Sertifikat</span>
+            </button>
+        </nav>
+
+        <!-- MODE 1: CLASSIFICATION / PATTERN SORTING ARENA -->
+        <section id="sec-sort" class="space-y-6">
+            <div class="hc-card glass-panel p-6 md:p-8 rounded-3xl shadow-2xl border border-emerald-100 text-center relative overflow-hidden">
+                
+                <!-- Audio Narrator Help Button for Visual Impaired Students -->
+                <button onclick="readCurrentCard()" class="absolute top-5 right-5 bg-amber-100 text-amber-800 hover:bg-amber-200 p-3 rounded-2xl shadow transition flex items-center gap-2 font-bold text-sm" title="Dengarkan Narasi Lengkap">
+                    <i class="fa-solid fa-volume-high text-lg"></i>
+                    <span class="hidden sm:inline">Bacakan Kartu</span>
+                </button>
+
+                <!-- Question Step Badge -->
+                <span id="badge-hint" class="inline-block bg-emerald-100 text-emerald-800 text-xs font-extrabold px-4 py-1.5 rounded-full mb-4 border border-emerald-300">
+                    KARTU AHLI WARIS #<span id="current-index-num">1</span>
+                </span>
+
+                <!-- Avatar Visual Graphic -->
+                <div class="w-28 h-28 mx-auto bg-gradient-to-tr from-emerald-100 via-amber-50 to-emerald-200 rounded-3xl flex items-center justify-center shadow-lg mb-4 border-2 border-emerald-300 relative">
+                    <div id="heir-avatar-svg" class="w-full h-full flex items-center justify-center">
+                        <i id="heir-icon" class="fa-solid fa-user-group text-5xl text-emerald-700"></i>
+                    </div>
+                </div>
+
+                <!-- Heir Name & Pattern Clue -->
+                <h3 id="heir-title" class="text-2xl md:text-4xl font-extrabold text-slate-800 hc-text-main mb-3">
+                    Memuat Kartu...
+                </h3>
+
+                <!-- Qur'anic Reference / Pattern Clue Card -->
+                <div class="max-w-2xl mx-auto mb-8 bg-amber-50/90 border-l-4 border-amber-500 p-4 rounded-r-2xl text-left shadow-sm">
+                    <div class="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase mb-1">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>Petunjuk Pola Waris (Pattern Clue)</span>
+                    </div>
+                    <p id="heir-clue" class="text-slate-700 hc-text-sub font-medium text-base md:text-lg">
+                        "Clue pola akan muncul di sini"
+                    </p>
+                </div>
+
+                <!-- Pattern Selection Buttons -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+                    <!-- ASHABUL FURUD BUTTON -->
+                    <button onclick="submitClassification('furud')" class="hc-badge-furud bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold p-6 rounded-3xl shadow-xl transform active:scale-95 transition-all text-left border-b-4 border-indigo-900 flex items-start space-x-4 group">
+                        <div class="bg-white/20 p-3.5 rounded-2xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-pie-chart text-3xl text-blue-100"></i>
+                        </div>
+                        <div>
+                            <span class="block text-xl font-black tracking-wide text-amber-200">ASHABUL FURUD</span>
+                            <span class="text-xs md:text-sm text-blue-100 font-normal leading-relaxed block mt-1">
+                                Ahli waris yang memiliki **bagian pecahan pasti** (1/2, 1/4, 1/8, 2/3, 1/3, 1/6).
+                            </span>
+                        </div>
+                    </button>
+
+                    <!-- ASHABAH BUTTON -->
+                    <button onclick="submitClassification('ashabah')" class="hc-badge-ashabah bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-bold p-6 rounded-3xl shadow-xl transform active:scale-95 transition-all text-left border-b-4 border-orange-900 flex items-start space-x-4 group">
+                        <div class="bg-white/20 p-3.5 rounded-2xl group-hover:scale-110 transition">
+                            <i class="fa-solid fa-coins text-3xl text-amber-100"></i>
+                        </div>
+                        <div>
+                            <span class="block text-xl font-black tracking-wide text-amber-200">ASHABAH</span>
+                            <span class="text-xs md:text-sm text-amber-100 font-normal leading-relaxed block mt-1">
+                                Ahli waris penerima **sisa harta** setelah Ashabul Furud mengambil bagiannya.
+                            </span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Interactive Educational Feedback Box -->
+                <div id="feedback-box" class="hidden mt-8 p-5 rounded-2xl text-left border-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+                    <div class="flex items-start space-x-4">
+                        <div id="feedback-icon-bg" class="p-3 rounded-2xl text-white text-2xl flex-shrink-0 mt-1">
+                            <i id="feedback-icon" class="fa-solid"></i>
+                        </div>
+                        <div>
+                            <h4 id="feedback-title" class="font-extrabold text-lg"></h4>
+                            <p id="feedback-text" class="text-sm md:text-base mt-1 font-normal leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <button onclick="nextCard()" id="btn-next-card" class="w-full md:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
+                        <span>Soal Berikutnya</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODE 2: CASE DETECTIVE SIMULATOR -->
+        <section id="sec-case" class="space-y-6 hidden">
+            <div class="hc-card glass-panel p-5 rounded-3xl shadow-md border border-emerald-100">
+                <h2 class="text-xl font-bold text-emerald-900 hc-text-main flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass-chart text-amber-500"></i> Detektif Kasus Waris
+                </h2>
+                <p class="text-slate-600 hc-text-sub text-sm">
+                    Analisis kasus pembagian harta peninggalan di bawah ini. Tentukan kedudukan pola masing-masing ahli waris secara tepat!
+                </p>
+            </div>
+
+            <!-- Dynamic Scenario Card -->
+            <div class="hc-card glass-panel p-6 md:p-8 rounded-3xl shadow-xl border border-emerald-200 space-y-6">
+                
+                <!-- Story Header -->
+                <div class="bg-gradient-to-r from-emerald-900 to-emerald-800 text-white p-5 rounded-2xl shadow-md flex justify-between items-start gap-4">
+                    <div class="space-y-1">
+                        <span class="bg-amber-400 text-emerald-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                            Skenario Kasus #<span id="case-num">1</span>
+                        </span>
+                        <h3 id="case-story" class="text-lg md:text-xl font-bold text-emerald-100 mt-2 leading-relaxed">
+                            Loading skenario...
+                        </h3>
+                    </div>
+                    <button onclick="readCaseStory()" class="bg-emerald-700 hover:bg-emerald-600 text-amber-300 p-3 rounded-xl shadow transition flex-shrink-0" title="Dengarkan Cerita Kasus">
+                        <i class="fa-solid fa-volume-high text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Interactive Heir Question List -->
+                <div id="case-questions" class="space-y-4">
+                    <!-- Dynamically generated items -->
+                </div>
+
+                <!-- Case Navigation Buttons -->
+                <div class="flex justify-between items-center pt-4 border-t border-slate-200">
+                    <span id="case-progress-indicator" class="text-xs font-bold text-slate-500">Skenario 1 dari 3</span>
+                    <button onclick="nextCaseScenario()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2 transition">
+                        <span>Skenario Berikutnya</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODE 3: PATTERN FRACTION MATCHING GAME -->
+        <section id="sec-match" class="space-y-6 hidden">
+            <div class="hc-card glass-panel p-5 rounded-3xl shadow-md border border-emerald-100">
+                <h2 class="text-xl font-bold text-emerald-900 hc-text-main flex items-center gap-2">
+                    <i class="fa-solid fa-puzzle-piece text-amber-500"></i> Cocokkan Pola & Pecahan
+                </h2>
+                <p class="text-slate-600 hc-text-sub text-sm">
+                    Pasangkan kartu Ahli Waris dengan Kaidah Pola Pecahan Waris yang tepat di kolom sebelah kanan!
+                </p>
+            </div>
+
+            <!-- Matching Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Column A: Heirs -->
+                <div class="space-y-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-4 py-2 rounded-xl text-center">
+                        Ahli Waris (Pilih Satu)
+                    </h3>
+                    <div id="match-col-a" class="space-y-3">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+
+                <!-- Column B: Fraction Rules -->
+                <div class="space-y-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-800 bg-indigo-100 px-4 py-2 rounded-xl text-center">
+                        Pola Bagian Pecahan
+                    </h3>
+                    <div id="match-col-b" class="space-y-3">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="match-feedback" class="hidden p-4 rounded-2xl text-center font-bold text-emerald-800 bg-emerald-100 border border-emerald-300">
+                🎉 Luar biasa! Seluruh pasangan berhasil dicocokkan dengan sempurna!
+            </div>
+        </section>
+
+        <!-- MODE 4: REKAP PRESTASI & SERTIFIKAT BELAJAR -->
+        <section id="sec-rekap" class="space-y-6 hidden">
+            <div class="hc-card glass-panel p-8 rounded-3xl shadow-2xl text-center space-y-6 border border-emerald-200">
+                <div class="w-24 h-24 bg-gradient-to-tr from-amber-300 to-amber-500 text-emerald-950 rounded-full flex items-center justify-center mx-auto text-5xl shadow-lg border-4 border-amber-200">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-emerald-900 hc-text-main">Laporan Prestasi Mawaris PAI</h2>
+                    <p class="text-slate-600 hc-text-sub max-w-lg mx-auto text-sm md:text-base mt-2">
+                        Selamat! Anda telah melatih kemampuan pengenalan pola (*Pattern Recognition*) dalam membedakan **Ashabul Furud** dan **Ashabah**.
+                    </p>
+                </div>
+
+                <!-- Result Cards Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 shadow-sm">
+                        <span class="text-xs font-extrabold text-emerald-700 uppercase">Skor Total</span>
+                        <p id="rekap-skor" class="text-4xl font-black text-emerald-800 mt-1">0</p>
+                    </div>
+                    <div class="bg-blue-50 p-5 rounded-2xl border border-blue-200 shadow-sm">
+                        <span class="text-xs font-extrabold text-blue-700 uppercase">Akurasi Jawaban</span>
+                        <p id="rekap-akurasi" class="text-4xl font-black text-blue-800 mt-1">0%</p>
+                    </div>
+                    <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm">
+                        <span class="text-xs font-extrabold text-amber-700 uppercase">Lencana Capaian</span>
+                        <p id="rekap-badge" class="text-lg font-black text-amber-800 mt-2">Pemula Mawaris</p>
+                    </div>
+                </div>
+
+                <!-- Certificate Generation Input -->
+                <div class="max-w-md mx-auto pt-6 border-t border-slate-200 text-left space-y-3">
+                    <label for="student-name" class="block text-sm font-bold text-slate-800 hc-text-main">
+                        Nama Murid / Siswa:
+                    </label>
+                    <input type="text" id="student-name" placeholder="Masukkan nama lengkap Anda..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 shadow-sm font-medium">
+                    
+                    <button onclick="printCertificate()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Cetak / Simpan Sertifikat Hasil Belajar</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: KAMUS WARIS & DIAGRAM SILSILAH (PATTERN GUIDE) -->
+    <div id="modal-kamus" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="hc-card glass-panel rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-emerald-400">
+            
+            <!-- Modal Header -->
+            <div class="bg-emerald-950 text-white p-5 flex justify-between items-center border-b border-emerald-800">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-400 text-emerald-950 p-2 rounded-xl font-bold">
+                        <i class="fa-solid fa-diagram-project text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-amber-300">Peta Silsilah & Kamus Mawaris</h3>
+                        <p class="text-xs text-emerald-300">Panduan Lengkap Pola Pembagian Waris Islam</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-kamus')" class="text-emerald-300 hover:text-white text-2xl font-bold px-3 py-1 bg-emerald-800 rounded-xl transition">&times;</button>
+            </div>
+            
+            <!-- Modal Scrollable Body -->
+            <div class="p-6 overflow-y-auto space-y-6 text-sm md:text-base">
+                
+                <!-- Quick Visual Diagram of Ashabul Furud vs Ashabah -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Furud Summary Card -->
+                    <div class="bg-blue-50/90 p-5 rounded-2xl border-l-4 border-blue-600 shadow-sm space-y-2">
+                        <h4 class="font-extrabold text-blue-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-pie-chart text-blue-600"></i> Pola 1: Ashabul Furud
+                        </h4>
+                        <p class="text-blue-950 text-xs md:text-sm leading-relaxed">
+                            Penerima **bagian pecahan pasti** yang telah ditetapkan ukurannya dalam Al-Qur'an (Surat An-Nisa):
+                        </p>
+                        <div class="grid grid-cols-3 gap-1.5 text-center font-bold text-xs pt-1">
+                            <span class="bg-blue-200 text-blue-900 p-1.5 rounded-lg">1/2</span>
+                            <span class="bg-blue-200 text-blue-900 p-1.5 rounded-lg">1/4</span>
+                            <span class="bg-blue-200 text-blue-900 p-1.5 rounded-lg">1/8</span>
+                            <span class="bg-blue-200 text-blue-900 p-1.5 rounded-lg">2/3</span>
+                            <span class="bg-blue-200 text-blue-900 p-1.5 rounded-lg">1/3</span>
+                            <span class="bg-blue-200 text-blue-900 p-1.5 rounded-lg">1/6</span>
+                        </div>
+                    </div>
+
+                    <!-- Ashabah Summary Card -->
+                    <div class="bg-amber-50/90 p-5 rounded-2xl border-l-4 border-amber-600 shadow-sm space-y-2">
+                        <h4 class="font-extrabold text-amber-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-coins text-amber-600"></i> Pola 2: Ashabah (Sisa)
+                        </h4>
+                        <p class="text-amber-950 text-xs md:text-sm leading-relaxed">
+                            Penerima **seluruh sisa harta** setelah bagian Ashabul Furud diserahkan:
+                        </p>
+                        <ul class="text-xs space-y-1 font-medium text-amber-900 pt-1">
+                            <li>• <strong>Ashabah Binafsi:</strong> Karena dirinya sendiri (Anak LK, Cucu LK, Ayah, Saudara LK).</li>
+                            <li>• <strong>Ashabah Bil-Ghair:</strong> Ditarik jadi ashabah oleh saudara laki-lakinya.</li>
+                            <li>• <strong>Ashabah Ma'al Ghair:</strong> Bersama ahli waris perempuan lain.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tabular Detailed Rules -->
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse text-xs md:text-sm">
+                        <thead class="bg-emerald-900 text-white">
+                            <tr>
+                                <th class="p-3">Ahli Waris</th>
+                                <th class="p-3">Pola Kedudukan</th>
+                                <th class="p-3">Syarat & Kondisi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-slate-700">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">Suami</td>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">1/2 atau 1/4</span></td>
+                                <td class="p-3">1/2 jika tidak ada anak; 1/4 jika ada anak.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">Istri</td>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">1/4 atau 1/8</span></td>
+                                <td class="p-3">1/4 jika tidak ada anak; 1/8 jika ada anak.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">Anak Laki-Laki</td>
+                                <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">Ashabah</span></td>
+                                <td class="p-3">Menerima sisa harta terbesar. Memutus (hijab) saudara & paman.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">Ibu</td>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">1/3 atau 1/6</span></td>
+                                <td class="p-3">1/3 jika tak ada anak/saudara; 1/6 jika ada anak/dua saudara.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">Anak Perempuan</td>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">1/2 atau 2/3</span></td>
+                                <td class="p-3">1/2 jika tunggal; 2/3 jika 2+ orang; jadi Ashabah jika ada anak LK.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-100 border-t border-slate-200 text-right">
+                <button onclick="closeModal('modal-kamus')" class="bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold px-6 py-2.5 rounded-xl shadow">
+                    Paham, Tutup Panduan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Bar -->
+    <footer class="bg-emerald-950 text-emerald-300 text-center text-xs py-4 px-4 border-t border-emerald-800 mt-8 space-y-1">
+        <p>Game Edukasi Mawaris PAI Inklusif Kelas XII SMK &bull; Fokus Pembelajaran: Pattern Recognition (Ashabul Furud vs Ashabah)</p>
+        <p class="text-amber-300 font-bold text-sm tracking-wide">Kreator : Fahrudin, S.Pd.I</p>
+    </footer>
+
+    <script>
+        /* -------------------------------------------------------------
+           GAME DATA & ACCESSIBILITY LOGIC
+        ------------------------------------------------------------- */
+        
+        // Data Kartu Ahli Waris (Sorting Arena)
+        const HEIR_CARDS = [
+            {
+                name: "Istri",
+                type: "furud",
+                icon: "fa-person-dress",
+                clue: "Mendapat 1/4 jika pewaris tidak meninggalkan anak, atau 1/8 jika pewaris meninggalkan anak (QS. An-Nisa: 12).",
+                explanation: "Istri selalu termasuk Ashabul Furud karena bagiannya telah ditetapkan secara pasti dalam kitab suci (1/4 atau 1/8)."
+            },
+            {
+                name: "Anak Laki-Laki",
+                type: "ashabah",
+                icon: "fa-child-reaching",
+                clue: "Mengambil seluruh sisa harta peninggalan setelah Ashabul Furud mengambil bagiannya.",
+                explanation: "Anak laki-laki adalah Ashabah Binafsi (penerima sisa harta terkuat dalam hukum waris Islam)."
+            },
+            {
+                name: "Ibu",
+                type: "furud",
+                icon: "fa-person-breastfeeding",
+                clue: "Mendapat bagian pasti 1/3 jika tidak ada anak, atau 1/6 jika ada anak/dua saudara.",
+                explanation: "Ibu termasuk Ashabul Furud dengan hak pecahan pasti (1/3 atau 1/6)."
+            },
+            {
+                name: "Saudara Laki-Laki Kandung",
+                type: "ashabah",
+                icon: "fa-people-arrows",
+                clue: "Menerima sisa harta jika tidak terhalang oleh anak laki-laki atau ayah.",
+                explanation: "Saudara Laki-Laki Kandung berada dalam pola Ashabah (penerima sisa)."
+            },
+            {
+                name: "Suami",
+                type: "furud",
+                icon: "fa-person",
+                clue: "Mendapat 1/2 jika tidak ada anak, atau 1/4 jika ada anak.",
+                explanation: "Suami adalah Ashabul Furud utama dengan hak bagian pasti (1/2 atau 1/4)."
+            },
+            {
+                name: "Paman Kandung",
+                type: "ashabah",
+                icon: "fa-user-tie",
+                clue: "Menerima sisa harta dari jalur kerabat laki-laki pihak ayah.",
+                explanation: "Paman kandung adalah ahli waris penerima sisa harta (Ashabah)."
+            },
+            {
+                name: "Nenek",
+                type: "furud",
+                icon: "fa-person-cane",
+                clue: "Mendapat bagian pasti 1/6 jika tidak terhalang oleh keberadaan Ibu.",
+                explanation: "Nenek mendapatkan bagian pasti 1/6 (Ashabul Furud)."
+            },
+            {
+                name: "Cucu Laki-Laki",
+                type: "ashabah",
+                icon: "fa-child",
+                clue: "Penerima sisa harta yang menggantikan posisi anak laki-laki jika anak laki-laki sudah wafat.",
+                explanation: "Cucu laki-laki dari jalur anak laki-laki adalah penerima sisa harta (Ashabah)."
+            }
+        ];
+
+        // Data Skenario Kasus (Mode 2)
+        const CASE_SCENARIOS = [
+            {
+                story: "Pak Budi meninggal dunia. Beliau meninggalkan harta dan ahli waris: Istri, Ibu, dan 1 Anak Laki-Laki.",
+                items: [
+                    { heir: "Istri", correct: "furud", portion: "1/8 (Ashabul Furud)" },
+                    { heir: "Ibu", correct: "furud", portion: "1/6 (Ashabul Furud)" },
+                    { heir: "Anak Laki-Laki", correct: "ashabah", portion: "Sisa Harta (Ashabah)" }
+                ]
+            },
+            {
+                story: "Ibu Rahma meninggal dunia. Ahli waris yang ditinggalkan: Suami dan 1 Saudara Laki-Laki Kandung.",
+                items: [
+                    { heir: "Suami", correct: "furud", portion: "1/2 (Ashabul Furud)" },
+                    { heir: "Saudara Laki-Laki Kandung", correct: "ashabah", portion: "Sisa Harta (Ashabah)" }
+                ]
+            },
+            {
+                story: "Pak Herman meninggal dunia. Ahli waris: Istri, 1 Anak Perempuan, dan Paman Kandung.",
+                items: [
+                    { heir: "Istri", correct: "furud", portion: "1/8 (Ashabul Furud)" },
+                    { heir: "Anak Perempuan", correct: "furud", portion: "1/2 (Ashabul Furud)" },
+                    { heir: "Paman Kandung", correct: "ashabah", portion: "Sisa Harta (Ashabah)" }
+                ]
+            }
+        ];
+
+        // Data Matching Game (Mode 3)
+        const MATCH_ITEMS = [
+            { id: 1, heir: "Suami (Ada Anak)", rule: "1/4 Pecahan Pasti" },
+            { id: 2, heir: "Anak Laki-Laki", rule: "Penerima Sisa (Ashabah)" },
+            { id: 3, heir: "Istri (Ada Anak)", rule: "1/8 Pecahan Pasti" },
+            { id: 4, heir: "Ibu (Tidak Ada Anak)", rule: "1/3 Pecahan Pasti" }
+        ];
+
+        // Global State
+        let currentCardIndex = 0;
+        let score = 0;
+        let totalAnswered = 0;
+        let comboStreak = 0;
+        let audioEnabled = true;
+        let fontStep = 0;
+        let currentCaseIndex = 0;
+        let bgmPlaying = false;
+        let bgmSynth = null;
+        let selectedMatchA = null;
+        let matchedCount = 0;
+
+        // Text-To-Speech Narrator Function (Indonesian language)
+        function speakText(text) {
+            if (!audioEnabled) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.rate = 0.88; // Slower rate for special education clarity
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Sound Effects Synthesizer using Tone.js
+        function playAudioEffect(type) {
+            if (!audioEnabled) return;
+            try {
+                const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -6;
+                
+                if (type === 'correct') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n");
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease(["C3", "C#3"], "4n");
+                } else if (type === 'click') {
+                    const clickSynth = new Tone.MembraneSynth().toDestination();
+                    clickSynth.volume.value = -12;
+                    clickSynth.triggerAttackRelease("C2", "16n");
+                } else if (type === 'levelUp') {
+                    synth.triggerAttackRelease(["G4", "C5", "E5", "G5", "C6"], "8n");
+                }
+            } catch (e) {
+                console.log("Audio FX error", e);
+            }
+        }
+
+        // Background Music Generator using Tone.js Loop Synthesizer
+        function initBGM() {
+            bgmSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 0.8 }
+            }).toDestination();
+            bgmSynth.volume.value = -22;
+
+            const chords = [
+                ["C4", "E4", "G4"],
+                ["A3", "C4", "E4"],
+                ["F3", "A3", "C4"],
+                ["G3", "B3", "D4"]
+            ];
+
+            let step = 0;
+            Tone.Transport.scheduleRepeat((time) => {
+                const currentChord = chords[step % chords.length];
+                bgmSynth.triggerAttackRelease(currentChord, "2n", time);
+                step++;
+            }, "2n");
+
+            Tone.Transport.bpm.value = 85;
+        }
+
+        async function toggleBGM() {
+            try {
+                await Tone.start();
+            } catch (e) {}
+
+            if (!bgmSynth) initBGM();
+
+            bgmPlaying = !bgmPlaying;
+            const icon = document.getElementById('icon-bgm');
+            const status = document.getElementById('status-bgm');
+
+            if (bgmPlaying) {
+                Tone.Transport.start();
+                status.innerText = "ON";
+                icon.className = "fa-solid fa-compact-disc text-amber-300 animate-spin";
+                speakText("Musik latar diaktifkan.");
+            } else {
+                Tone.Transport.stop();
+                status.innerText = "OFF";
+                icon.className = "fa-solid fa-music text-amber-300";
+                speakText("Musik latar dimatikan.");
+            }
+        }
+
+        // Render Sorting Game Card
+        function renderCard() {
+            const card = HEIR_CARDS[currentCardIndex];
+            
+            document.getElementById('current-index-num').innerText = currentCardIndex + 1;
+            document.getElementById('progress-text').innerText = `${currentCardIndex + 1}/${HEIR_CARDS.length}`;
+            document.getElementById('heir-title').innerText = card.name;
+            document.getElementById('heir-clue').innerText = card.clue;
+            document.getElementById('heir-icon').className = `fa-solid ${card.icon} text-5xl text-emerald-700`;
+
+            document.getElementById('feedback-box').classList.add('hidden');
+
+            // Speech narration
+            speakText(`Kartu ${currentCardIndex + 1}: ${card.name}. Petunjuk: ${card.clue}`);
+        }
+
+        function readCurrentCard() {
+            const card = HEIR_CARDS[currentCardIndex];
+            speakText(`${card.name}. Petunjuk pola waris: ${card.clue}`);
+        }
+
+        // Process Answer Classification
+        function submitClassification(userChoice) {
+            playAudioEffect('click');
+            const card = HEIR_CARDS[currentCardIndex];
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackIconBg = document.getElementById('feedback-icon-bg');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            const isCorrect = (userChoice === card.type);
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-50', 'bg-rose-50', 'border-emerald-400', 'border-rose-400', 'text-emerald-950', 'text-rose-950');
+
+            if (isCorrect) {
+                score += 10;
+                comboStreak++;
+                playAudioEffect('correct');
+                
+                feedbackBox.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-950');
+                feedbackIconBg.className = 'p-3 rounded-2xl bg-emerald-600 text-white text-2xl flex-shrink-0';
+                feedbackIcon.className = 'fa-solid fa-check';
+                feedbackTitle.innerText = "Tepat Sekali! (Pola Sesuai)";
+
+                // Trigger confetti visual reward
+                try {
+                    confetti({ particleCount: 40, spread: 70, origin: { y: 0.7 } });
+                } catch(e){}
+
+            } else {
+                comboStreak = 0;
+                playAudioEffect('wrong');
+                feedbackBox.classList.add('bg-rose-50', 'border-rose-400', 'text-rose-950');
+                feedbackIconBg.className = 'p-3 rounded-2xl bg-rose-600 text-white text-2xl flex-shrink-0';
+                feedbackIcon.className = 'fa-solid fa-xmark';
+                feedbackTitle.innerText = "Kurang Tepat!";
+            }
+
+            // Update combo badge
+            const comboBadge = document.getElementById('combo-badge');
+            if (comboStreak >= 2) {
+                comboBadge.classList.remove('hidden');
+                document.getElementById('combo-count').innerText = comboStreak;
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+
+            feedbackText.innerText = card.explanation;
+            totalAnswered++;
+            updateStatsDisplay();
+
+            speakText(`${isCorrect ? "Tepat sekali!" : "Kurang tepat."} ${card.explanation}`);
+        }
+
+        function nextCard() {
+            if (currentCardIndex < HEIR_CARDS.length - 1) {
+                currentCardIndex++;
+                renderCard();
+            } else {
+                speakText("Selamat! Anda telah menyelesaikan seluruh sesi arena sortir pola ahli waris.");
+                switchTab('tab-rekap');
+            }
+        }
+
+        // Render Case Detective Simulator
+        function renderCaseScenario() {
+            const currentCase = CASE_SCENARIOS[currentCaseIndex];
+            document.getElementById('case-num').innerText = currentCaseIndex + 1;
+            document.getElementById('case-story').innerText = currentCase.story;
+            document.getElementById('case-progress-indicator').innerText = `Skenario ${currentCaseIndex + 1} dari ${CASE_SCENARIOS.length}`;
+
+            const qContainer = document.getElementById('case-questions');
+            qContainer.innerHTML = '';
+
+            currentCase.items.forEach((item, idx) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-4 rounded-2xl border border-emerald-200 bg-white shadow-sm space-y-2';
+                itemEl.innerHTML = `
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <span class="font-bold text-slate-800 text-base md:text-lg">${idx + 1}. ${item.heir}</span>
+                        <div class="space-x-2">
+                            <button onclick="checkCaseItem(${idx}, 'furud')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition">Ashabul Furud</button>
+                            <button onclick="checkCaseItem(${idx}, 'ashabah')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition">Ashabah</button>
+                        </div>
+                    </div>
+                    <div id="case-res-${idx}" class="hidden text-xs md:text-sm font-semibold p-2.5 rounded-xl mt-2"></div>
+                `;
+                qContainer.appendChild(itemEl);
+            });
+        }
+
+        function readCaseStory() {
+            const currentCase = CASE_SCENARIOS[currentCaseIndex];
+            speakText(currentCase.story);
+        }
+
+        function checkCaseItem(itemIdx, userChoice) {
+            const item = CASE_SCENARIOS[currentCaseIndex].items[itemIdx];
+            const resEl = document.getElementById(`case-res-${itemIdx}`);
+            resEl.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-rose-100', 'text-rose-900');
+
+            if (userChoice === item.correct) {
+                resEl.classList.add('bg-emerald-100', 'text-emerald-900');
+                resEl.innerHTML = `<i class="fa-solid fa-check mr-1 text-emerald-600"></i> Benar! Kedudukan Pola: ${item.portion}`;
+                speakText(`Benar. ${item.heir} berkedudukan sebagai ${item.portion}`);
+                score += 15;
+            } else {
+                resEl.classList.add('bg-rose-100', 'text-rose-900');
+                resEl.innerHTML = `<i class="fa-solid fa-xmark mr-1 text-rose-600"></i> Salah. Jawaban yang benar: ${item.portion}`;
+                speakText(`Salah. Kedudukan yang benar adalah ${item.portion}`);
+            }
+            updateStatsDisplay();
+        }
+
+        function nextCaseScenario() {
+            if (currentCaseIndex < CASE_SCENARIOS.length - 1) {
+                currentCaseIndex++;
+                renderCaseScenario();
+            } else {
+                switchTab('tab-rekap');
+            }
+        }
+
+        // Mode 3: Matching Game Logic
+        function renderMatchingGame() {
+            const colA = document.getElementById('match-col-a');
+            const colB = document.getElementById('match-col-b');
+            colA.innerHTML = '';
+            colB.innerHTML = '';
+            matchedCount = 0;
+            document.getElementById('match-feedback').classList.add('hidden');
+
+            MATCH_ITEMS.forEach(item => {
+                const btnA = document.createElement('button');
+                btnA.id = `match-a-${item.id}`;
+                btnA.className = 'w-full p-4 bg-white border-2 border-emerald-300 rounded-2xl text-left font-bold text-slate-800 shadow-sm hover:bg-emerald-50 transition';
+                btnA.innerText = item.heir;
+                btnA.onclick = () => selectMatchA(item.id);
+                colA.appendChild(btnA);
+
+                const btnB = document.createElement('button');
+                btnB.id = `match-b-${item.id}`;
+                btnB.className = 'w-full p-4 bg-white border-2 border-indigo-300 rounded-2xl text-left font-bold text-slate-800 shadow-sm hover:bg-indigo-50 transition';
+                btnB.innerText = item.rule;
+                btnB.onclick = () => checkMatchB(item.id);
+                colB.appendChild(btnB);
+            });
+        }
+
+        function selectMatchA(id) {
+            playAudioEffect('click');
+            selectedMatchA = id;
+            MATCH_ITEMS.forEach(item => {
+                const el = document.getElementById(`match-a-${item.id}`);
+                if (el) el.classList.remove('ring-4', 'ring-amber-400');
+            });
+            const selEl = document.getElementById(`match-a-${id}`);
+            if (selEl) selEl.classList.add('ring-4', 'ring-amber-400');
+        }
+
+        function checkMatchB(id) {
+            if (!selectedMatchA) {
+                speakText("Pilih dahulu ahli waris di kolom sebelah kiri.");
+                return;
+            }
+
+            if (selectedMatchA === id) {
+                playAudioEffect('correct');
+                score += 20;
+                matchedCount++;
+                document.getElementById(`match-a-${id}`).classList.add('bg-emerald-200', 'opacity-60');
+                document.getElementById(`match-b-${id}`).classList.add('bg-emerald-200', 'opacity-60');
+                document.getElementById(`match-a-${id}`).disabled = true;
+                document.getElementById(`match-b-${id}`).disabled = true;
+                selectedMatchA = null;
+
+                if (matchedCount === MATCH_ITEMS.length) {
+                    document.getElementById('match-feedback').classList.remove('hidden');
+                    speakText("Luar biasa! Seluruh pasangan berhasil dicocokkan dengan sempurna.");
+                    try { confetti({ particleCount: 50 }); } catch(e){}
+                }
+            } else {
+                playAudioEffect('wrong');
+                speakText("Pasangan kurang tepat, silakan coba lagi.");
+            }
+            updateStatsDisplay();
+        }
+
+        // Update Dashboard Statistics
+        function updateStatsDisplay() {
+            document.getElementById('score-display').innerText = score;
+            const accuracy = totalAnswered > 0 ? Math.round((score / (totalAnswered * 10)) * 100) : 100;
+            document.getElementById('accuracy-display').innerText = `${Math.min(accuracy, 100)}%`;
+
+            let title = "Pengenal Pola Pemula";
+            if (score >= 40) title = "Cendekia Mawaris";
+            if (score >= 80) title = "Ahli Pattern Waris";
+            document.getElementById('level-title').innerText = title;
+            document.getElementById('rekap-skor').innerText = score;
+            document.getElementById('rekap-akurasi').innerText = `${Math.min(accuracy, 100)}%`;
+            document.getElementById('rekap-badge').innerText = title;
+        }
+
+        // Accessibility Controls
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('status-audio').innerText = audioEnabled ? "ON" : "OFF";
+            speakText(audioEnabled ? "Suara narasi aktif." : "");
+        }
+
+        function toggleHighContrast() {
+            document.body.classList.toggle('high-contrast');
+            const isHC = document.body.classList.contains('high-contrast');
+            speakText(isHC ? "Mode kontras tinggi aktif." : "Mode kontras standar aktif.");
+        }
+
+        function toggleDyslexiaFont() {
+            document.body.classList.toggle('dyslexia-font');
+            const isDys = document.body.classList.contains('dyslexia-font');
+            speakText(isDys ? "Font khusus disleksia aktif." : "Font standar aktif.");
+        }
+
+        function adjustFontSize(delta) {
+            fontStep += delta;
+            if (fontStep < -2) fontStep = -2;
+            if (fontStep > 4) fontStep = 4;
+            const baseSize = 16 + (fontStep * 2);
+            document.documentElement.style.fontSize = `${baseSize}px`;
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.getElementById('sec-sort').classList.add('hidden');
+            document.getElementById('sec-case').classList.add('hidden');
+            document.getElementById('sec-match').classList.add('hidden');
+            document.getElementById('sec-rekap').classList.add('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn bg-white text-emerald-900 font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow hover:bg-emerald-50 transition";
+            });
+
+            if (tabId === 'game-sort') {
+                document.getElementById('sec-sort').classList.remove('hidden');
+                document.getElementById('tab-sort').className = "tab-btn bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md transition";
+            } else if (tabId === 'game-case') {
+                document.getElementById('sec-case').classList.remove('hidden');
+                document.getElementById('tab-case').className = "tab-btn bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md transition";
+                renderCaseScenario();
+            } else if (tabId === 'game-match') {
+                document.getElementById('sec-match').classList.remove('hidden');
+                document.getElementById('tab-match').className = "tab-btn bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md transition";
+                renderMatchingGame();
+            } else if (tabId === 'tab-rekap') {
+                document.getElementById('sec-rekap').classList.remove('hidden');
+                document.getElementById('tab-summary').className = "tab-btn bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl flex items-center gap-2 shadow-md transition";
+            }
+        }
+
+        // Modals Logic
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // Print/Save Certificate Function
+        function printCertificate() {
+            const name = document.getElementById('student-name').value.trim() || "Siswa PAI Kelas XII SMK";
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Sertifikat Hasil Latihan Mawaris - ${name}</title>
+                    <style>
+                        body { font-family: 'Helvetica', sans-serif; text-align: center; padding: 40px; border: 12px double #047857; margin: 20px; background: #fff; }
+                        h1 { color: #047857; font-size: 28px; margin-bottom: 5px; }
+                        h2 { font-size: 24px; color: #1e293b; margin-top: 15px; border-bottom: 2px solid #047857; display: inline-block; padding-bottom: 5px; }
+                        .badge { font-size: 18px; font-weight: bold; color: #b45309; margin-top: 10px; }
+                        .score { font-size: 36px; font-weight: bold; color: #047857; margin: 20px 0; }
+                        .footer { margin-top: 50px; font-size: 12px; color: #64748b; }
+                    </style>
+                </head>
+                <body>
+                    <h1>SERTIFIKAT HASIL BELAJAR PAI INKLUSIF</h1>
+                    <p style="font-size:14px; color:#475569;">Siswa Berprestasi Pembelajaran Pattern Recognition Mawaris</p>
+                    <p>Diberikan Kepada:</p>
+                    <h2>${name}</h2>
+                    <br>
+                    <p>Telah menyelesaikan seluruh modul dan tantangan klasifikasi <strong>Ashabul Furud vs Ashabah</strong></p>
+                    <div class="score">Skor Akhir: ${score}</div>
+                    <div class="badge">Lencana Capaian: ${document.getElementById('rekap-badge').innerText}</div>
+                    <br><br><br>
+                    <table width="100%">
+                        <tr>
+                            <td width="50%"><strong>Siswa</strong><br><br><br>(${name})</td>
+                            <td width="50%"><strong>Kreator & Guru Pengampu PAI</strong><br><br><br><strong>( Fahrudin, S.Pd.I )</strong></td>
+                        </tr>
+                    </table>
+                    <div class="footer">Game Edukasi Mawaris PAI Kelas XII SMK &bull; Kreator: Fahrudin, S.Pd.I &bull; Inklusif & Ramah Berkebutuhan Khusus</div>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
+            printWin.print();
+        }
+
+        // Initialize Application
+        window.onload = function() {
+            renderCard();
+            updateStatsDisplay();
+        };
+    </script>
+</body>
+</html>
